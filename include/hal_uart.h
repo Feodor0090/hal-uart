@@ -40,39 +40,60 @@
 #define UART_P0 ((HAL_UART_Type *)UART_0_BASE_ADDRESS)
 #define UART_P1 ((HAL_UART_Type *)UART_1_BASE_ADDRESS)
 
+typedef struct
+{
+    // Дескриптор устройства.
+    HAL_UART_Type *dev;
+    // Базовая частота (обычно 32_000_000).
+    uint32_t baseFreq;
+    // Скорость интерфейса в бодах. Будет округлена в большую сторону.
+    uint32_t bod;
+    // Одно из значений TXRX, TX_ONLY, RX_ONLY.
+    uint8_t dirs;
+    /**
+     * Одно из значений FRAME_7BITS, FRAME_8BITS, FRAME_9BITS.
+     * Использование 9-битных передач требует использования Send16/Receive16 методов,
+     * в противном случае старший бит будет отбрасываться. При использовании битов
+     * чётности требуется установить длину кадра на 1 бит длиннее реальной (бит вставляется в кадр).
+     */
+    uint8_t frameLength;
+    // Одно из значений PB_DISABLED, PB_ENABLE, PB_INVERTED.
+    uint8_t parityBit;
+    // Одно из значений LSBF, MSBF.
+    uint8_t firstBit;
+    // Одно из значений POLARITY_DEFAULT, POLARITY_INVERTED.
+    uint8_t dataPolarity;
+    // Одно из значений POLARITY_DEFAULT, POLARITY_INVERTED.
+    uint8_t txPolarity;
+    // Одно из значений POLARITY_DEFAULT, POLARITY_INVERTED.
+    uint8_t rxPolarity;
+    // true для обмена RX и TX выходов местами.
+    bool swap;
+    // Одно из значений STOP_1, STOP_2.
+    uint8_t stopType;
+    // Параметры тактирования.
+    UsartClockSetup clock;
+    // true для включения.
+    bool enableCTS;
+    // true для включения.
+    bool enableRTS;
+} UART_InitData;
+
 /**
  * Включает приёмник и передатчик с настройками по умолчанию.
  *
  * \param dev Дескриптор устройства.
+ * \param baseFreq Базовая частота (обычно 32_000_000).
  * \param bod Скорость интерфейса в бодах. Будет округлена в большую сторону.
  */
-void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t bod);
+void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t baseFreq, uint32_t bod);
 /**
  * Приводит настройки модуля и включает его.
  *
  * \param dev Дескриптор устройства.
- * \param bod Скорость интерфейса в бодах. Будет округлена в большую сторону.
- * \param dirs Одно из значений TXRX, TX_ONLY, RX_ONLY.
- * \param frameLength Одно из значений FRAME_7BITS, FRAME_8BITS, FRAME_9BITS.
- * Использование 9-битных передач требует использования Send16/Receive16 методов,
- * в противном случае старший бит будет отбрасываться. При использовании битов
- * чётности требуется установить длину кадра на 1 бит длиннее реальной (бит вставляется в кадр).
- * \param parityBit Одно из значений PB_DISABLED, PB_ENABLE, PB_INVERTED.
- * \param firstBit Одно из значений LSBF, MSBF.
- * \param dataPolarity Одно из значений POLARITY_DEFAULT, POLARITY_INVERTED.
- * \param txPolarity Одно из значений POLARITY_DEFAULT, POLARITY_INVERTED.
- * \param rxPolarity Одно из значений POLARITY_DEFAULT, POLARITY_INVERTED.
- * \param swap true для обмена RX и TX выходов местами.
- * \param stopType Одно из значений STOP_1, STOP_2.
- * \param clock Параметры тактирования.
- * \param enableCTS true для включения.
- * \param enableRTS true для включения.
+ * \param init Данные для инициализации.
  */
-void HAL_UART_Enable(HAL_UART_Type *dev, uint32_t bod, uint8_t dirs,
-                    uint8_t frameLength, uint8_t parityBit, uint8_t firstBit,
-                    uint8_t dataPolarity, uint8_t txPolarity, uint8_t rxPolarity,
-                    bool swap, uint8_t stopType, UsartClockSetup clock,
-                    bool enableCTS, bool enableRTS);
+void HAL_UART_Enable(HAL_UART_Type *dev, UART_InitData* init);
 /**
  * Выключает устройство.
  *

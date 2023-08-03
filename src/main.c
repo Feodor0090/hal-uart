@@ -6,7 +6,7 @@ int main()
 {
     PM->CLK_APB_M_SET |= PM_CLOCK_PAD_CONFIG_M | PM_CLOCK_WU_M | PM_CLOCK_PM_M;
     PM->CLK_APB_P_SET |= PM_CLOCK_UART_0_M;
-    HAL_UART_EnableQuick(UART_P0, 115200);
+    HAL_UART_EnableQuick(UART_P0, 0, 115200);
     uint8_t buf8[] = {'a', 's', 'd', '\n'};
     unsigned i = 0;
     while (1)

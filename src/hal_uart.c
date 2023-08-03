@@ -1,9 +1,11 @@
 #include <hal_uart.h>
 
-void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t bod)
+void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t baseFreq, uint32_t bod)
 {
+    if(baseFreq == 0)
+        baseFreq = 32000000;
     HAL_UART_Reset(dev);
-    dev->DIVIDER = (32000000 / bod);
+    dev->DIVIDER = (baseFreq / bod);
     dev->CONTROL1.RE = 1;
     dev->CONTROL1.TE = 1;
     dev->CONTROL1.UE = 1;
@@ -12,52 +14,48 @@ void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t bod)
     while (!(dev->FLAGS.REACK))
         ;
 }
-void HAL_UART_Enable(HAL_UART_Type *dev, uint32_t bod, uint8_t dirs,
-                    uint8_t frameLength, uint8_t parityBit, uint8_t firstBit,
-                    uint8_t dataPolarity, uint8_t txPolarity, uint8_t rxPolarity,
-                    bool swap, uint8_t stopType, UsartClockSetup clock,
-                    bool enableCTS, bool enableRTS)
+void HAL_UART_Enable(HAL_UART_Type *dev, UART_InitData* init)
 {
     HAL_UART_Reset(dev);
     // basic setup
-    dev->DIVIDER = (32000000 / bod);
-    dev->CONTROL1.M0 = frameLength & 1;
-    dev->CONTROL1.M1 = (frameLength >> 1) & 1;
-    dev->CONTROL1.PCE = parityBit & 1;
-    dev->CONTROL1.PS = (parityBit >> 1) & 1;
-    dev->CONTROL2.MSBFIRST = firstBit & 1;
-    dev->CONTROL2.DATAINV = dataPolarity & 1;
-    dev->CONTROL2.TXINV = txPolarity & 1;
-    dev->CONTROL2.RXINV = rxPolarity & 1;
-    dev->CONTROL2.SWAP = swap;
-    dev->CONTROL2.STOP = stopType & 1;
+    dev->DIVIDER = (init->baseFreq / init->bod);
+    dev->CONTROL1.M0 = init->frameLength & 1;
+    dev->CONTROL1.M1 = (init->frameLength >> 1) & 1;
+    dev->CONTROL1.PCE = init->parityBit & 1;
+    dev->CONTROL1.PS = (init->parityBit >> 1) & 1;
+    dev->CONTROL2.MSBFIRST = init->firstBit & 1;
+    dev->CONTROL2.DATAINV = init->dataPolarity & 1;
+    dev->CONTROL2.TXINV = init->txPolarity & 1;
+    dev->CONTROL2.RXINV = init->rxPolarity & 1;
+    dev->CONTROL2.SWAP = init->swap;
+    dev->CONTROL2.STOP = init->stopType & 1;
     // clock
-    dev->CONTROL2.CLKEN = clock.enabled;
-    dev->CONTROL2.OCPL = clock.idlePolarity;
-    dev->CONTROL2.CPHA = clock.firstTick;
-    dev->CONTROL2.LBCL = clock.lastTick;
+    dev->CONTROL2.CLKEN = init->clock.enabled;
+    dev->CONTROL2.OCPL = init->clock.idlePolarity;
+    dev->CONTROL2.CPHA = init->clock.firstTick;
+    dev->CONTROL2.LBCL = init->clock.lastTick;
     // signals
-    dev->CONTROL3.CTSE = enableCTS;
-    dev->CONTROL3.RTSE = enableRTS;
+    dev->CONTROL3.CTSE = init->enableCTS;
+    dev->CONTROL3.RTSE = init->enableRTS;
     // waking up
-    if (dirs != TX_ONLY)
+    if (init->dirs != TX_ONLY)
     {
         // we need RX
         dev->CONTROL1.RE = 1;
     }
-    if (dirs != RX_ONLY)
+    if (init->dirs != RX_ONLY)
     {
         // we need TX
         dev->CONTROL1.TE = 1;
     }
     dev->CONTROL1.UE = 1; // powering up
-    if (dirs != TX_ONLY)
+    if (init->dirs != TX_ONLY)
     {
         // we need RX
         while (!(dev->FLAGS.REACK))
             ;
     }
-    if (dirs != RX_ONLY)
+    if (init->dirs != RX_ONLY)
     {
         // we need TX
         while (!(dev->FLAGS.TEACK))
