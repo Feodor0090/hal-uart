@@ -2,6 +2,8 @@
 
 void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t baseFreq, uint32_t bod)
 {
+    if (!dev)
+        return;
     if (baseFreq == 0)
         baseFreq = 32000000;
     HAL_UART_Reset(dev);
@@ -16,6 +18,10 @@ void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t baseFreq, uint32_t bod)
 }
 void HAL_UART_Enable(HAL_UART_Type *dev, UART_InitData *init)
 {
+    if (!dev)
+        return;
+    if (!init)
+        return;
     HAL_UART_Reset(dev);
     // basic setup
     dev->DIVIDER = (init->baseFreq / init->bod);
@@ -65,11 +71,15 @@ void HAL_UART_Enable(HAL_UART_Type *dev, UART_InitData *init)
 
 void HAL_UART_Disable(HAL_UART_Type *dev)
 {
+    if (!dev)
+        return;
     dev->CONTROL1.UE = 0;
 }
 
 void HAL_UART_Reset(HAL_UART_Type *dev)
 {
+    if (!dev)
+        return;
     HAL_UART_Disable(dev);
     dev->CONTROL1.value = 0;
     dev->CONTROL2.value = 0;
@@ -79,6 +89,8 @@ void HAL_UART_Reset(HAL_UART_Type *dev)
 
 uint8_t HAL_UART_Send(HAL_UART_Type *dev, uint16_t val)
 {
+    if (!dev)
+        return 1;
     dev->TXDATA = val;
     for (unsigned i = 0; i < TIMEOUT_TICKS; i++)
     {
@@ -92,6 +104,8 @@ uint8_t HAL_UART_Send(HAL_UART_Type *dev, uint16_t val)
 
 uint8_t HAL_UART_Send8(HAL_UART_Type *dev, uint8_t *buffer, unsigned count)
 {
+    if (!buffer)
+        return 1;
     for (unsigned i = 0; i < count; i++)
     {
         if (HAL_UART_Send(dev, (uint16_t)buffer[i]))
@@ -102,6 +116,8 @@ uint8_t HAL_UART_Send8(HAL_UART_Type *dev, uint8_t *buffer, unsigned count)
 
 uint8_t HAL_UART_Send16(HAL_UART_Type *dev, uint16_t *buffer, unsigned count)
 {
+    if (!buffer)
+        return 1;
     for (unsigned i = 0; i < count; i++)
     {
         if (HAL_UART_Send(dev, buffer[i]))
@@ -112,6 +128,8 @@ uint8_t HAL_UART_Send16(HAL_UART_Type *dev, uint16_t *buffer, unsigned count)
 
 uint8_t HAL_UART_SendNT(HAL_UART_Type *dev, char *string)
 {
+    if (!string)
+        return 1;
     unsigned i = 0;
     while (string[i] != 0)
     {
@@ -124,6 +142,8 @@ uint8_t HAL_UART_SendNT(HAL_UART_Type *dev, char *string)
 
 uint16_t HAL_UART_Receive(HAL_UART_Type *dev)
 {
+    if (!dev)
+        return 0;
     while (!HAL_UART_HasInput(dev))
         ;
     return HAL_UART_Read(dev);
@@ -131,6 +151,11 @@ uint16_t HAL_UART_Receive(HAL_UART_Type *dev)
 
 uint16_t HAL_UART_Receive_t(HAL_UART_Type *dev, unsigned timeout, uint8_t *status)
 {
+    if (!dev)
+    {
+        *status = 1;
+        return 0;
+    }
     for (unsigned i = 0; i < timeout; i++)
     {
         if (HAL_UART_HasInput(dev))
@@ -166,6 +191,10 @@ uint8_t HAL_UART_Receive16(HAL_UART_Type *dev, uint16_t *buf, unsigned count)
 
 int HAL_UART_Receive8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, int maxCount, bool keepTerm, bool processBackspace)
 {
+    if (!dev)
+        return 0;
+    if (!buf)
+        return 0; // длина строк
     if (keepTerm)
         maxCount--;
     if (maxCount < 1)
@@ -209,6 +238,10 @@ int HAL_UART_Receive8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, 
 
 int HAL_UART_Echo8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, int maxCount, bool keepTerm)
 {
+    if (!dev)
+        return 0;
+    if (!buf)
+        return 0; // длина строк
     if (keepTerm)
         maxCount--;
     if (maxCount < 1)
@@ -258,6 +291,8 @@ int HAL_UART_Echo8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, int
 
 int HAL_UART_ReceiveAsciiInt(HAL_UART_Type *dev, uint8_t breakChar, bool echo)
 {
+    if (!dev)
+        return 0;
     int len = 0;
     int number = 0;
     bool negative = false;
@@ -319,6 +354,8 @@ int HAL_UART_ReceiveAsciiInt(HAL_UART_Type *dev, uint8_t breakChar, bool echo)
 
 uint8_t HAL_UART_SendAsciiInt(HAL_UART_Type *dev, int num)
 {
+    if (!dev)
+        return 1;
     uint8_t status = 0;
     bool neg = num < 0;
     if (neg)
