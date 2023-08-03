@@ -2,7 +2,7 @@
 
 void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t baseFreq, uint32_t bod)
 {
-    if(baseFreq == 0)
+    if (baseFreq == 0)
         baseFreq = 32000000;
     HAL_UART_Reset(dev);
     dev->DIVIDER = (baseFreq / bod);
@@ -14,7 +14,7 @@ void HAL_UART_EnableQuick(HAL_UART_Type *dev, uint32_t baseFreq, uint32_t bod)
     while (!(dev->FLAGS.REACK))
         ;
 }
-void HAL_UART_Enable(HAL_UART_Type *dev, UART_InitData* init)
+void HAL_UART_Enable(HAL_UART_Type *dev, UART_InitData *init)
 {
     HAL_UART_Reset(dev);
     // basic setup
@@ -77,37 +77,49 @@ void HAL_UART_Reset(HAL_UART_Type *dev)
     dev->DIVIDER = 0;
 }
 
-void HAL_UART_Send(HAL_UART_Type *dev, uint16_t val)
+uint8_t HAL_UART_Send(HAL_UART_Type *dev, uint16_t val)
 {
     dev->TXDATA = val;
-    while (!(dev->FLAGS.TC))
-        ;
+    for (unsigned i = 0; i < TIMEOUT_TICKS; i++)
+    {
+        if (dev->FLAGS.TC)
+        {
+            return 0;
+        }
+    }
+    return 1;
 }
 
-void HAL_UART_Send8(HAL_UART_Type *dev, uint8_t *buffer, unsigned count)
+uint8_t HAL_UART_Send8(HAL_UART_Type *dev, uint8_t *buffer, unsigned count)
 {
     for (unsigned i = 0; i < count; i++)
     {
-        HAL_UART_Send(dev, (uint16_t)buffer[i]);
+        if (HAL_UART_Send(dev, (uint16_t)buffer[i]))
+            return 1;
     }
+    return 0;
 }
 
-void HAL_UART_Send16(HAL_UART_Type *dev, uint16_t *buffer, unsigned count)
+uint8_t HAL_UART_Send16(HAL_UART_Type *dev, uint16_t *buffer, unsigned count)
 {
     for (unsigned i = 0; i < count; i++)
     {
-        HAL_UART_Send(dev, buffer[i]);
+        if (HAL_UART_Send(dev, buffer[i]))
+            return 1;
     }
+    return 0;
 }
 
-void HAL_UART_SendNT(HAL_UART_Type *dev, char *string)
+uint8_t HAL_UART_SendNT(HAL_UART_Type *dev, char *string)
 {
     unsigned i = 0;
     while (string[i] != 0)
     {
-        HAL_UART_Send(dev, string[i]);
+        if (HAL_UART_Send(dev, string[i]))
+            return 1;
         i++;
     }
+    return 0;
 }
 
 uint16_t HAL_UART_Receive(HAL_UART_Type *dev)

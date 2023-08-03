@@ -40,6 +40,8 @@
 #define UART_P0 ((HAL_UART_Type *)UART_0_BASE_ADDRESS)
 #define UART_P1 ((HAL_UART_Type *)UART_1_BASE_ADDRESS)
 
+#define TIMEOUT_TICKS 100000
+
 typedef struct
 {
     // Дескриптор устройства.
@@ -108,35 +110,35 @@ void HAL_UART_Disable(HAL_UART_Type *dev);
 void HAL_UART_Reset(HAL_UART_Type *dev);
 
 /**
- * Отправляет один кадр (7-9 бит). Старшие биты игнорируются.
+ * Отправляет один кадр (7-9 бит). Старшие биты игнорируются. Возвращает 1, если отправка не была успешно завершена.
  *
  * \param dev Дескриптор устройства.
  * \param val Байт/слово для отправки.
  */
-void HAL_UART_Send(HAL_UART_Type *dev, uint16_t val);
+uint8_t HAL_UART_Send(HAL_UART_Type *dev, uint16_t val);
 /**
- * Отправляет буфер данных (7-8 бит на кадр).
+ * Отправляет буфер данных (7-8 бит на кадр). Возвращает 1, если отправка не была успешно завершена.
  *
  * \param dev Дескриптор устройства.
  * \param buffer Буфер.
  * \param count Длина буфера.
  */
-void HAL_UART_Send8(HAL_UART_Type *dev, uint8_t *buffer, unsigned count);
+uint8_t HAL_UART_Send8(HAL_UART_Type *dev, uint8_t *buffer, unsigned count);
 /**
- * Отправляет буфер данных (9 бит на кадр, старшие биты игнорируются).
+ * Отправляет буфер данных (9 бит на кадр, старшие биты игнорируются). Возвращает 1, если отправка не была успешно завершена.
  *
  * \param dev Дескриптор устройства.
  * \param buffer Буфер.
  * \param count Длина буфера.
  */
-void HAL_UART_Send16(HAL_UART_Type *dev, uint16_t *buffer, unsigned count);
+uint8_t HAL_UART_Send16(HAL_UART_Type *dev, uint16_t *buffer, unsigned count);
 /**
- * Отправляет null-терминированный буфер (строку).
+ * Отправляет null-терминированный буфер (строку). Возвращает 1, если отправка не была успешно завершена.
  *
  * \param dev Дескриптор устройства.
  * \param string Буфер.
  */
-void HAL_UART_SendNT(HAL_UART_Type *dev, char *string);
+uint8_t HAL_UART_SendNT(HAL_UART_Type *dev, char *string);
 
 /**
  * Проверяет, доступны ли данные для чтения. Вернёт 0, если читать нечего, 1 если кадр ждёт принятия.
