@@ -158,22 +158,31 @@ uint8_t HAL_UART_SendNT(HAL_UART_Type *dev, char *string);
  * \param dev Дескриптор устройства.
  */
 uint16_t HAL_UART_Receive(HAL_UART_Type *dev);
+
 /**
- * Принимает буфер данных (7-8 бит на кадр).
+ * Ждёт прибытия данных указанное количество циклов и возвращает 1 кадр.
+ *
+ * \param dev Дескриптор устройства.
+ * \param timeout Количество шагов цикла ожидания.
+ * \param status Статус получения. 1, если данные не пришли.
+ */
+uint16_t HAL_UART_Receive_t(HAL_UART_Type *dev, unsigned timeout, uint8_t* status);
+/**
+ * Принимает буфер данных (7-8 бит на кадр). Возвращает 1, если данные не пришли.
  *
  * \param dev Дескриптор устройства.
  * \param buf Буфер.
  * \param count Длина буфера.
  */
-void HAL_UART_Receive8(HAL_UART_Type *dev, uint8_t *buf, unsigned count);
+uint8_t HAL_UART_Receive8(HAL_UART_Type *dev, uint8_t *buf, unsigned count);
 /**
- * Принимает буфер данных (9 бит на кадр, старшие биты игнорируются).
+ * Принимает буфер данных (9 бит на кадр, старшие биты игнорируются). Возвращает 1, если данные не пришли.
  *
  * \param dev Дескриптор устройства.
  * \param buf Буфер.
  * \param count Длина буфера.
  */
-void HAL_UART_Receive16(HAL_UART_Type *dev, uint16_t *buf, unsigned count);
+uint8_t HAL_UART_Receive16(HAL_UART_Type *dev, uint16_t *buf, unsigned count);
 
 /**
  * Читает входящие данные до символа-разделителя. Вернёт длину считанной строки. Вернёт -1, если длины буфера не хватило.
@@ -209,7 +218,13 @@ int HAL_UART_Echo8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, int
  */
 int HAL_UART_ReceiveAsciiInt(HAL_UART_Type *dev, uint8_t breakChar, bool echo);
 
-void HAL_UART_SendAsciiInt(HAL_UART_Type *dev, int num);
+/**
+ * Отправляет число записанное текстом в десятичной системе. Возвращает 1, если отправка была не успешной.
+ *
+ * \param dev Дескриптор устройства.
+ * \param num Число для отправки.
+*/
+uint8_t HAL_UART_SendAsciiInt(HAL_UART_Type *dev, int num);
 
 #define HAL_UART_SetDtr(dev, ready) dev->MODEM.DTR = ready & 1;
 #define HAL_UART_GetDsr(dev) (dev->MODEM.DSR)

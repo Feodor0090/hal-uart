@@ -129,20 +129,39 @@ uint16_t HAL_UART_Receive(HAL_UART_Type *dev)
     return HAL_UART_Read(dev);
 }
 
-void HAL_UART_Receive8(HAL_UART_Type *dev, uint8_t *buf, unsigned count)
+uint16_t HAL_UART_Receive_t(HAL_UART_Type *dev, unsigned timeout, uint8_t *status)
 {
-    for (unsigned i = 0; i < count; i++)
+    for (unsigned i = 0; i < timeout; i++)
     {
-        buf[i] = (uint8_t)HAL_UART_Receive(dev);
+        if (HAL_UART_HasInput(dev))
+            return HAL_UART_Read(dev);
     }
+    *status = 1;
+    return 0;
 }
 
-void HAL_UART_Receive16(HAL_UART_Type *dev, uint16_t *buf, unsigned count)
+uint8_t HAL_UART_Receive8(HAL_UART_Type *dev, uint8_t *buf, unsigned count)
 {
+    uint8_t stat = 0;
     for (unsigned i = 0; i < count; i++)
     {
-        buf[i] = HAL_UART_Receive(dev);
+        buf[i] = (uint8_t)HAL_UART_Receive_t(dev, TIMEOUT_TICKS, &stat);
+        if (stat)
+            return 1;
     }
+    return 0;
+}
+
+uint8_t HAL_UART_Receive16(HAL_UART_Type *dev, uint16_t *buf, unsigned count)
+{
+    uint8_t stat = 0;
+    for (unsigned i = 0; i < count; i++)
+    {
+        buf[i] = HAL_UART_Receive_t(dev, TIMEOUT_TICKS, &stat);
+        if (stat)
+            return 1;
+    }
+    return 0;
 }
 
 int HAL_UART_Receive8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, int maxCount, bool keepTerm, bool processBackspace)
@@ -298,8 +317,9 @@ int HAL_UART_ReceiveAsciiInt(HAL_UART_Type *dev, uint8_t breakChar, bool echo)
     }
 }
 
-void HAL_UART_SendAsciiInt(HAL_UART_Type *dev, int num)
+uint8_t HAL_UART_SendAsciiInt(HAL_UART_Type *dev, int num)
 {
+    uint8_t status = 0;
     bool neg = num < 0;
     if (neg)
         num = -num;
@@ -315,12 +335,13 @@ void HAL_UART_SendAsciiInt(HAL_UART_Type *dev, int num)
     i++;
     if (neg)
     {
-        HAL_UART_Send(dev, '-');
+        status |= HAL_UART_Send(dev, '-');
     }
 
     do
     {
         i--;
-        HAL_UART_Send(dev, (uint16_t)(str[i]));
+        status |= HAL_UART_Send(dev, (uint16_t)(str[i]));
     } while (i > 0);
+    return status;
 }
