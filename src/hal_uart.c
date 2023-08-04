@@ -142,6 +142,7 @@ uint8_t HAL_UART_SendNT(HAL_UART_Type *dev, char *string)
 
 uint16_t HAL_UART_Receive(HAL_UART_Type *dev)
 {
+    // блокирующее получение
     if (!dev)
         return 0;
     while (!HAL_UART_HasInput(dev))
@@ -151,6 +152,7 @@ uint16_t HAL_UART_Receive(HAL_UART_Type *dev)
 
 uint16_t HAL_UART_Receive_t(HAL_UART_Type *dev, unsigned timeout, uint8_t *status)
 {
+    // получение через таймаут
     if (!dev)
     {
         *status = 1;
@@ -195,8 +197,9 @@ int HAL_UART_Receive8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, 
         return 0;
     if (!buf)
         return 0; // длина строк
+
     if (keepTerm)
-        maxCount--;
+        maxCount--; // предпоследний элемент будет занят
     if (maxCount < 1)
         return -1;
     if (maxCount == 1)
@@ -220,7 +223,7 @@ int HAL_UART_Receive8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, 
             buf[i] = 0;
             return i;
         }
-        if (processBackspace && (next == 8))
+        if (processBackspace && (next == 8)) // 8 = control BS
         {
             if (i > 0)
                 i--;
@@ -228,7 +231,7 @@ int HAL_UART_Receive8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, 
         }
         buf[i] = next;
         i++;
-        if (i == maxCount - 1)
+        if (i == maxCount - 1) // последний элемент будет нулём
         {
             buf[i] = 0;
             return -1;
@@ -271,8 +274,10 @@ int HAL_UART_Echo8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, int
         {
             if (i > 0)
             {
+                // затирание символа
                 HAL_UART_Send(dev, 8);
                 HAL_UART_Send(dev, ' ');
+                // возврат назад
                 HAL_UART_Send(dev, 8);
                 i--;
             }
@@ -281,7 +286,7 @@ int HAL_UART_Echo8Until(HAL_UART_Type *dev, uint8_t breakChar, uint8_t *buf, int
         buf[i] = next;
         i++;
         HAL_UART_Send(dev, next);
-        if (i == maxCount - 1)
+        if (i == maxCount - 1) // последний элемент будет нулём
         {
             buf[i] = 0;
             return -1;
@@ -305,7 +310,8 @@ int HAL_UART_ReceiveAsciiInt(HAL_UART_Type *dev, uint8_t breakChar, bool echo)
                 return -number;
             return number;
         }
-        if (len == 0 && next == '-')
+        if (len == 0 // знак можно поставить только перед числом
+            && next == '-')
         {
             negative = true;
             if (echo)
@@ -313,7 +319,7 @@ int HAL_UART_ReceiveAsciiInt(HAL_UART_Type *dev, uint8_t breakChar, bool echo)
             continue;
         }
         if (next == 8)
-        {
+        { // стирание
             if (len > 1)
             {
                 number /= 10;
@@ -336,8 +342,10 @@ int HAL_UART_ReceiveAsciiInt(HAL_UART_Type *dev, uint8_t breakChar, bool echo)
             // gets here if erase actually occurs
             if (echo)
             {
+                // затирание символа
                 HAL_UART_Send(dev, 8);
                 HAL_UART_Send(dev, ' ');
+                // возврат назад
                 HAL_UART_Send(dev, 8);
             }
             continue;
@@ -348,7 +356,7 @@ int HAL_UART_ReceiveAsciiInt(HAL_UART_Type *dev, uint8_t breakChar, bool echo)
             len++;
             if (echo)
                 HAL_UART_Send(dev, next);
-        }
+        } // всё кроме дефиса, чисел и дефиса игнорируется
     }
 }
 
@@ -359,8 +367,8 @@ uint8_t HAL_UART_SendAsciiInt(HAL_UART_Type *dev, int num)
     uint8_t status = 0;
     bool neg = num < 0;
     if (neg)
-        num = -num;
-    unsigned char str[16];
+        num = -num; // минимальное число не будет обработано корректно (а надо?)
+    unsigned char str[16]; // FILO кэш. В мин инте 11 цифр (-2147483648), 16 хватит.
     unsigned i = 0;
     while (num > 10)
     {
