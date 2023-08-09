@@ -169,6 +169,8 @@ uint16_t HAL_UART_Receive_t(HAL_UART_Type *dev, unsigned timeout, uint8_t *statu
 
 uint8_t HAL_UART_Receive8(HAL_UART_Type *dev, uint8_t *buf, unsigned count)
 {
+    if (!buf)
+        return;
     uint8_t stat = 0;
     for (unsigned i = 0; i < count; i++)
     {
@@ -181,6 +183,8 @@ uint8_t HAL_UART_Receive8(HAL_UART_Type *dev, uint8_t *buf, unsigned count)
 
 uint8_t HAL_UART_Receive16(HAL_UART_Type *dev, uint16_t *buf, unsigned count)
 {
+    if (!buf)
+        return 1;
     uint8_t stat = 0;
     for (unsigned i = 0; i < count; i++)
     {
